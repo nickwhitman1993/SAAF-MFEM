@@ -1,0 +1,16 @@
+#!/bin/bash
+##### These lines are for Moab
+#MSUB -l walltime=0:02:00
+#MSUB -q pbatch
+#MSUB -l procs=80
+#MSUB -o WR3.output
+#MSUB -l depend=543442
+
+##### These are shell commands
+echo -n 'This machine is ';hostname
+echo -n 'My jobid is '; echo $SLURM_JOBID
+echo 'My path is:' 
+echo $PATH
+echo ' '
+echo '--------------------- Job Output Below ---------------------'
+srun -n80 ./WangRagusa -s 8 -e 3 -m ~/broom/Meshes/WangRagusaUnitPeriodic.mesh -i 1000 -probEpsilon 1

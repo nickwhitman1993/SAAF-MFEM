@@ -86,14 +86,14 @@ int main(int argc, char *argv[]) {
    std::string meshFileStr, meshDistortionStr, getProblemStr;
    int BuffSize(100);
    char meshFile[BuffSize], meshDistortion[BuffSize], getProblem[BuffSize];
-   
+
    // 1. Parse command-line options.
    refLevels = tryOption("-r", "refinement levels", argc, argv, 0);
    feOrder = tryOption("-e", "Finite element order", argc, argv, 1);
    timer =     tryOption("--timer", "--no-timer", "Prints timing statistics", argc, argv, false);
    meshOrder = tryOption("-g", "Geometry (mesh) order", argc, argv, -1);
    meshDistortionAlpha = tryOption("-a", "mesh distortion magnitude", argc, argv, -1.0);
-   meshFileStr = tryOption("-m", "Mesh file", argc, argv, "../../../broom/Meshes/inline-quad.mesh");
+   meshFileStr = tryOption("-m", "Mesh file", argc, argv, "../../../broom2/Meshes/inline-quad.mesh");
    // conver to char to broadcast
    sprintf(meshFile, meshFileStr.c_str());
    meshDistortionStr = tryOption("-d", "Mesh distortion", argc, argv, "none");
@@ -105,7 +105,7 @@ int main(int argc, char *argv[]) {
    sprintf(getProblem, getProblemStr.c_str());
    probEpsilon = tryOption("-probEpsilon", "factor of epsilon in diffusion limit", argc, argv, 0.1);
    restart = tryOption( "--restart","--no-restart", "Use restart file", argc, argv, false);
-   
+
    // Timer initialization
    double t0(0), t1(0), t2(0), t3(0), t4(0), t5(0), t6(0), t7(0);
    double saveTime(0);
@@ -119,7 +119,7 @@ int main(int argc, char *argv[]) {
    Mesh &mesh(meshLoader.getMesh());
    mesh.PrintCharacteristics();
    int dim = mesh.Dimension();
-   
+
    // Parse the input and figure out what problem we're running.
    setProblemSpecification(getProblem, probEpsilon, problemSpec);
 
@@ -157,7 +157,7 @@ int main(int argc, char *argv[]) {
     phi_conv[i] = 0;
     lphi[i] = 0;
   }
-   
+
    // read in restart file
    // TODO restart file variable name
    if (restart) {
@@ -194,18 +194,18 @@ int main(int argc, char *argv[]) {
    // Diffusion Equation Solve
    // TODO only one process needs to do this
    diffPhi = 0;
-   
+
    int tmpMyRank = 0;
-   
+
    diffSolve diffSolve(dim, sigma_a_function, diff_Q_function, diff_function, fes, gphi, directSolve, tmpMyRank);
-   
+
    if(timer)
    {
       t2 = MPI_Wtime();
    }
-   
+
    mfem::GridFunctionCoefficient diffPhiCoef(&diffPhi);
-         
+
 #if 0 // switch to debug and not overwrite.
    // Restart File
    ofstream writeResFile("./Adams2D001.res");
@@ -218,7 +218,7 @@ int main(int argc, char *argv[]) {
    std::cout << "Unable to open writeResFile\n";
    }
 #endif
-      
+
    // TODO only need one process to perform this
    // SAVE function
    char* meshName = new char[getProblemStr.length()];
@@ -249,7 +249,7 @@ int main(int argc, char *argv[]) {
             GridFunctionBroom gphiBroom(gphi);
             cout << "L2 error: " << gphiBroom.ComputeL2ErrorBroom2(exSol) << "\n";
          }
-         
+
       }
    }
 
@@ -258,9 +258,9 @@ int main(int argc, char *argv[]) {
       t7 = MPI_Wtime();
       saveTime += t7-t6;
    }
-   
+
    cout << "BINGO, solved\n";
-   
+
    if(timer)
    {
       cout << "\n=============================================\n";

@@ -97,7 +97,7 @@ int main(int argc, char *argv[]) {
    std::string meshFileStr, meshDistortionStr, getProblemStr;
    int BuffSize(100);
    char meshFile[BuffSize], meshDistortion[BuffSize], quadFile[BuffSize], getProblem[BuffSize];
-   
+
    if(myRank == 0) {
       // 1. Parse command-line options.
       refLevels = tryOption("-r", "refinement levels", argc, argv, 0);
@@ -107,12 +107,12 @@ int main(int argc, char *argv[]) {
       quadType = tryOption("--quadType", "Quadrature order type [1=LS from Cheuck, 2=LS from Ardra]", argc, argv, 2);
       timer =     tryOption("--timer", "--no-timer", "Prints timing statistics", argc, argv, false);
       if( quadType == 1) {
-         sprintf(quadFile, "../../../broom/src/LS Quadratures/LS_%d.txt", SnOrder / 2);
+         sprintf(quadFile, "../../../broom2/src/LS Quadratures/LS_%d.txt", SnOrder / 2);
       } else {
-         sprintf(quadFile, "../../../broom/src/LS Quadratures2/S%d_LS_from_ARDRA.txt", SnOrder);
+         sprintf(quadFile, "../../../broom2/src/LS Quadratures2/S%d_LS_from_ARDRA.txt", SnOrder);
       meshOrder = tryOption("-g", "Geometry (mesh) order", argc, argv, -1);
       meshDistortionAlpha = tryOption("-a", "mesh distortion magnitude", argc, argv, -1.0);
-      meshFileStr = tryOption("-m", "Mesh file", argc, argv, "../../../broom/Meshes/inline-quad.mesh");
+      meshFileStr = tryOption("-m", "Mesh file", argc, argv, "../../../broom2/Meshes/inline-quad.mesh");
       // conver to char to broadcast
       sprintf(meshFile, meshFileStr.c_str());
       meshDistortionStr = tryOption("-d", "Mesh distortion", argc, argv, "none");
@@ -132,15 +132,15 @@ int main(int argc, char *argv[]) {
       restart = tryOption( "--restart","--no-restart", "Use restart file", argc, argv, false);
       }
    } // end myRank==0
-   
-   
-   
+
+
+
   // TODO The initialGuess actually gets doubled in the first iteration.
   // My first thought is it gets doubled by the weights (since this is a 1D
   // problem; I assume it would be 4x in 2D)
   // initialGuess = 0.5 * initialGuess;
   // TODO check the ^^ previous ^^ TODO
-   
+
 #if defined(BROOM_USE_MPI)
    MPI_Barrier(MPI_COMM_WORLD);
    MPI_Bcast(&refLevels, 1, MPI_INT, 0, MPI_COMM_WORLD);
@@ -162,7 +162,7 @@ int main(int argc, char *argv[]) {
    MPI_Bcast(&timer, 1, MPI_INT, 0, MPI_COMM_WORLD);
    MPI_Bcast(&getProblem, BuffSize, MPI_CHAR, 0, MPI_COMM_WORLD);
 #endif
-   
+
    // Timer initialization
    double t0(0), t1(0), t2(0), t3(0), t4(0), t5(0), t6(0), t7(0);
    double transportTime(0), DSAtime(0), saveTime(0);
@@ -170,7 +170,7 @@ int main(int argc, char *argv[]) {
    {
       t0 = MPI_Wtime();
    }
-   
+
   Quadrature quadrature(quadFile, SnOrder);
 
   const int numAngles = quadrature.getNumAngles();
@@ -181,7 +181,7 @@ int main(int argc, char *argv[]) {
   eta = quadrature.getEta();
   xi = quadrature.getXi();
   w = quadrature.getWeight();
-  
+
   // Put all angle data into a vetor to be passed to ProblemSpecification
   std::vector<std::vector<double> > angleData(4);
   angleData[0] = quadrature.getMu();
@@ -196,12 +196,12 @@ int main(int argc, char *argv[]) {
      mesh.PrintCharacteristics();
    }
    int dim = mesh.Dimension();
-   
+
    // Get vector direction
    std::vector<double> vecDirection(2);
    vecDirection[0] = mu[q];
    vecDirection[1] = eta[q];
-   
+
    // Parse the input and figure out what problem we're running.
    //setProblemSpecification(getProblem, probEpsilon, vecDirection, problemSpec);
    setProblemSpecification(getProblem, probEpsilon, angleData, problemSpec);
@@ -210,7 +210,7 @@ int main(int argc, char *argv[]) {
       //std::cout << problemSpec->computeS0(test) << "\n";
       //std::cout << "computeSigmaT:\t" << problemSpec->computeSigmaT(test) << "\n";
    }
-   
+
 
 
   // 4. Define the discontinuous DG finite element space of the given
@@ -249,7 +249,7 @@ int main(int argc, char *argv[]) {
   GridFunction exSol_vis(&fes);
   exSol_vis.ProjectCoefficient(exSol);
   GridFunction inflow_vis(&fes);
-   
+
    GridFunction psi_vis0(&fes);
    GridFunction psi_vis1(&fes);
    GridFunction psi_vis2(&fes);
@@ -260,7 +260,7 @@ int main(int argc, char *argv[]) {
     phi_conv[i] = 0;
     lphi[i] = 0;
   }
-  
+
    // Generate random initial guess
    double randGuess[gphi.Size()];
    //mfem::GridFunction randGuess;
@@ -271,7 +271,7 @@ int main(int argc, char *argv[]) {
          randGuess[i] = exp(log(low) + (log(high) - log(low))*rand()/RAND_MAX);
       }
    }
-   
+
    // read in restart file
    // TODO restart file variable name
    if (restart) {
@@ -299,7 +299,7 @@ int main(int argc, char *argv[]) {
          gphi[i] = randGuess[i];
       }
    }
-         
+
 #if defined(BROOM_USE_MPI)
       MPI_Barrier(MPI_COMM_WORLD);
       MPI_Bcast(gphi, gphi.Size(), MPI_DOUBLE, 0, MPI_COMM_WORLD);
@@ -310,7 +310,7 @@ int main(int argc, char *argv[]) {
   // phi_old = initialGuess;
   // phi = initialGuess;
   // phi_conv = 0.0;
-  
+
   if(timer)
   {
       t1 = MPI_Wtime();
@@ -319,16 +319,16 @@ int main(int argc, char *argv[]) {
    // Diffusion Equation Solve
    // TODO only one process needs to do this
    diffPhi = 0;
-  
+
    diffSolve diffSolve(dim, sigma_a_function, diff_Q_function, diff_function, fes, diffPhi, directSolve, myRank);
-   
+
    if(timer)
    {
       t2 = MPI_Wtime();
    }
-   
+
    mfem::GridFunctionCoefficient diffPhiCoef(&diffPhi);
-   
+
    // If problemName == WangRagusa. Used to track spectral radius
    double sr1, sr2, sr3;
    sr1=10;
@@ -347,10 +347,10 @@ int main(int argc, char *argv[]) {
          {
             t3 = MPI_Wtime();
          }
-         
+
          Solve solve(dim, qloop, q, omega_function, inflow_function, psi0_function, sigma_t_function, sigma_s_function, qext_function, fes, phi_old, lphi, myRank, numAngles, numProcs, directSolve, problemSpec);
-         
-         
+
+
          sigma_t_vis = solve.getSigt();
          sigma_s_vis = solve.getSigs();
          qext_vis = solve.getQext();
@@ -366,20 +366,20 @@ int main(int argc, char *argv[]) {
          } else if (q == 3) {
             psi_vis3 = solve.getPsi();
          }
-         
+
       } // END LOOP OVER OMEGA
-         
+
          if(timer)
          {
             t4 = MPI_Wtime();
             transportTime += t4-t3;
          }
-    
+
 #if defined(BROOM_USE_MPI)
       gphi = 0;
       MPI_Barrier(MPI_COMM_WORLD);
       MPI_Allreduce(lphi.GetData(), gphi.GetData(), phi_old.Size(), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-                  
+
 #else
       gphi = lphi;
 #endif
@@ -403,13 +403,13 @@ int main(int argc, char *argv[]) {
          t6 = MPI_Wtime();
          DSAtime += t6-t5;
       }
-      
+
 #if defined(BROOM_USE_MPI)
       MPI_Barrier(MPI_COMM_WORLD);
       MPI_Bcast(gphi, gphi.Size(), MPI_DOUBLE, 0, MPI_COMM_WORLD);
       MPI_Bcast(lDsaPhi, lDsaPhi.Size(), MPI_DOUBLE, 0, MPI_COMM_WORLD);
 #endif
-         
+
 #if 0 // switch to debug and not overwrite.
       // Restart File
       ofstream writeResFile("./Adams2D001.res");
@@ -422,7 +422,7 @@ int main(int argc, char *argv[]) {
          std::cout << "Unable to open writeResFile\n";
       }
 #endif
-      
+
       // TODO only need one process to perform this
       // SAVE function
       char* meshName = new char[getProblemStr.length()];
@@ -475,7 +475,7 @@ int main(int argc, char *argv[]) {
             phi_conv[i] = -phi_conv[i];
          }
       }
-    
+
       // Check for Convergence
       double phiMax = phi_conv.Max();
       phi_conv_num = phiMax;
@@ -490,11 +490,11 @@ int main(int argc, char *argv[]) {
          gphi[i] = 0;
          lphi[i] = 0;
       }
-      
+
 #if 1
       // normal spectral radius
       spec_radius = phi_conv_num / phi_conv_denom;
-   
+
       if(getProblemStr == "WangRagusa")
       {
          // Keep third-to-last spec_radius
@@ -502,7 +502,7 @@ int main(int argc, char *argv[]) {
          sr2 = sr1;
          sr1 = spec_radius;
       }
-         
+
       if(myRank == 0) {
          cout << "Itr = " << cntconv << ", phi_conv.max =  " << phiMax << ", spectral radius: " << spec_radius << "\n";
       }
@@ -518,7 +518,7 @@ int main(int argc, char *argv[]) {
       } else {
          spec_radius = 1.0e20;
       }
-         
+
       if(myRank == 0) {
          cout << "Itr = " << cntconv << ", phi_conv.max =  " << phi_oldMax << ", spectral radius: " << spec_radius << "\n";
       }
@@ -552,7 +552,7 @@ int main(int argc, char *argv[]) {
                cout << "total time:                " << t7-t0 << " s. " << "(" << (t7-t0)/(t7-t0)*100 << "%)" << "\n";
             }
          }
-         
+
          if (getProblemStr == "WangRagusa") {
             bool spec_rad_study(true);
             if(myRank == 0) {
@@ -560,7 +560,7 @@ int main(int argc, char *argv[]) {
                   std::ostringstream oss;
                   oss << "WR_specRad_" << feOrder << ".out";
                   std::string strSRFile = oss.str();
-                  // Use third-to-last spec_radius as 
+                  // Use third-to-last spec_radius as
                   std::ofstream specRad;
                   specRad.open(strSRFile.c_str(), std::ofstream::app);
                   specRad << sr3 << "\n";

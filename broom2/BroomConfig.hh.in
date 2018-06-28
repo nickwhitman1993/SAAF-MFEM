@@ -1,0 +1,11 @@
+// the configured options and settings for Broom
+#define Broom_VERSION_MAJOR @Broom_VERSION_MAJOR@
+#define Broom_VERSION_MINOR @Broom_VERSION_MINOR@
+#cmakedefine BROOM_HAVE_MACH_TIME
+#cmakedefine BROOM_HAVE_RT_TIME
+#cmakedefine BROOM_HAVE_UMFPACK
+#cmakedefine BROOM_HAVE_METIS
+#cmakedefine BROOM_HAVE_HYPRE
+#cmakedefine BROOM_USE_OPENMP
+#cmakedefine BROOM_USE_MPI
+
